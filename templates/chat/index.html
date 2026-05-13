@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  {% load static %}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Study Planner</title>
+  <meta name="description" content="Your personal study planner and productivity dashboard." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--           STUDY PLANNER DASHBOARD           -->
+<!-- ═══════════════════════════════════════════ -->
+
+<div id="app">
+
+  <!-- TOP NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <span class="brand-icon">📚</span>
+      <span class="brand-name">StudyFlow</span>
+    </div>
+    <div class="nav-actions">
+      <div class="date-badge" id="dateBadge"></div>
+      <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+        <span id="themeIcon">🌙</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="dashboard">
+
+    <!-- LEFT COLUMN -->
+    <div class="col-left">
+
+      <!-- GREETING CARD -->
+      <div class="card greeting-card">
+        <div class="greeting-text">
+          <p class="greeting-sub">Good <span id="timeOfDay">morning</span> 👋</p>
+          <h1 class="greeting-name">Let's focus today</h1>
+          <p class="greeting-quote" id="quoteText">"The secret of getting ahead is getting started."</p>
+        </div>
+        <div class="greeting-visual">
+          <div class="study-ring">
+            <svg viewBox="0 0 120 120" class="progress-ring">
+              <circle cx="60" cy="60" r="50" class="ring-bg"/>
+              <circle cx="60" cy="60" r="50" class="ring-fill" id="dailyRing"/>
+            </svg>
+            <div class="ring-center">
+              <span class="ring-pct" id="dailyPct">0%</span>
+              <span class="ring-label">done</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- POMODORO TIMER -->
+      <div class="card pomodoro-card">
+        <div class="card-header">
+          <h2 class="card-title">🍅 Focus Timer</h2>
+          <div class="pomo-tabs">
+            <button class="pomo-tab active" data-mins="25">Focus</button>
+            <button class="pomo-tab" data-mins="5">Short</button>
+            <button class="pomo-tab" data-mins="15">Long</button>
+          </div>
+        </div>
+        <div class="pomo-display">
+          <div class="pomo-time" id="pomoTime">25:00</div>
+          <div class="pomo-bar-wrap"><div class="pomo-bar" id="pomoBar"></div></div>
+        </div>
+        <div class="pomo-controls">
+          <button class="btn-icon" id="pomoReset" title="Reset">⟳</button>
+          <button class="btn-pomo" id="pomoToggle">Start</button>
+          <button class="btn-icon" id="pomoSkip" title="Skip">⏭</button>
+        </div>
+        <p class="pomo-session" id="pomoSession">Session 1 of 4</p>
+      </div>
+
+      <!-- DAILY GOALS -->
+      <div class="card goals-card">
+        <div class="card-header">
+          <h2 class="card-title">🎯 Daily Goals</h2>
+          <span class="goal-count" id="goalCount">0/3</span>
+        </div>
+        <div class="goals-list" id="goalsList">
+          <div class="goal-item">
+            <input type="checkbox" class="goal-check" id="g1" onchange="updateGoals()">
+            <label for="g1">Complete 2 chapters of DSA</label>
+          </div>
+          <div class="goal-item">
+            <input type="checkbox" class="goal-check" id="g2" onchange="updateGoals()">
+            <label for="g2">Solve 5 LeetCode problems</label>
+          </div>
+          <div class="goal-item">
+            <input type="checkbox" class="goal-check" id="g3" onchange="updateGoals()">
+            <label for="g3">Review yesterday's notes</label>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="col-right">
+
+      <!-- ADD TASK — SECRET ACTIVATION FIELD -->
+      <div class="card task-card">
+        <div class="card-header">
+          <h2 class="card-title">📋 Study Tasks</h2>
+          <span class="task-badge" id="taskBadge">0 tasks</span>
+        </div>
+        <div class="task-input-wrap">
+          <input
+            type="text"
+            id="taskInput"
+            class="task-input"
+            placeholder="Add a new study task..."
+            autocomplete="off"
+          />
+          <button class="btn-add" id="taskAddBtn">+</button>
+        </div>
+        <div class="task-list" id="taskList">
+          <div class="task-empty">
+            <span>✨</span>
+            <p>No tasks yet. Add one above!</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUICK NOTES -->
+      <div class="card notes-card">
+        <div class="card-header">
+          <h2 class="card-title">📝 Quick Notes</h2>
+          <button class="btn-clear-notes" id="clearNotes">Clear</button>
+        </div>
+        <textarea
+          id="notesArea"
+          class="notes-textarea"
+          placeholder="Jot down anything important... formulas, key concepts, reminders..."
+        ></textarea>
+        <div class="notes-footer">
+          <span id="noteChars">0 chars</span>
+          <span class="notes-saved" id="notesSaved"></span>
+        </div>
+      </div>
+
+      <!-- STUDY REMINDERS -->
+      <div class="card reminders-card">
+        <div class="card-header">
+          <h2 class="card-title">🔔 Reminders</h2>
+        </div>
+        <div class="reminder-list" id="reminderList">
+          <div class="reminder-item active">
+            <span class="reminder-dot"></span>
+            <div class="reminder-content">
+              <p class="reminder-text">Revision: Operating Systems</p>
+              <span class="reminder-time">Today, 3:00 PM</span>
+            </div>
+          </div>
+          <div class="reminder-item">
+            <span class="reminder-dot"></span>
+            <div class="reminder-content">
+              <p class="reminder-text">Assignment: DBMS Lab</p>
+              <span class="reminder-time">Tomorrow, 9:00 AM</span>
+            </div>
+          </div>
+          <div class="reminder-item">
+            <span class="reminder-dot"></span>
+            <div class="reminder-content">
+              <p class="reminder-text">Mock Test: Data Structures</p>
+              <span class="reminder-time">Friday, 2:00 PM</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- FAKE NOTIFICATION TOAST -->
+  <div class="toast" id="toastNotif">
+    <span class="toast-icon">🔔</span>
+    <span id="toastText">Study Reminder Updated</span>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--         HIDDEN CHAT OVERLAY                 -->
+<!-- ═══════════════════════════════════════════ -->
+
+<div class="chat-overlay" id="chatOverlay">
+  <div class="chat-panel" id="chatPanel">
+
+    <!-- CHAT HEADER (styled like "Notes Export") -->
+    <div class="chat-header">
+      <div class="chat-header-left">
+        <div class="chat-status-dot" id="chatStatusDot"></div>
+        <span class="chat-header-title">session notes</span>
+      </div>
+      <div class="chat-header-right">
+
+        <button class="chat-close-btn" id="chatCloseBtn">×</button>
+      </div>
+    </div>
+
+    <!-- CONNECTION STATUS -->
+    <div class="chat-connect-bar" id="chatConnectBar">
+      <span class="connect-pulse"></span>
+      <span id="connectText">Connecting...</span>
+    </div>
+
+    <!-- MESSAGES AREA -->
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-no-msg" id="chatNoMsg">
+        <div class="no-msg-icon">🔐</div>
+        <p>Secure channel active</p>
+        <small>Messages disappear on close</small>
+      </div>
+    </div>
+
+    <!-- TYPING INDICATOR -->
+    <div class="typing-indicator" id="typingIndicator">
+      <div class="typing-dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <!-- CHAT INPUT (looks like note input) -->
+    <div class="chat-input-wrap">
+      <input
+        type="text"
+        id="chatInput"
+        class="chat-input"
+        placeholder="Write a note..."
+        autocomplete="off"
+      />
+      <button class="chat-send-btn" id="chatSendBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--         SCRIPTS                             -->
+<!-- ═══════════════════════════════════════════ -->
+
+<!-- CryptoJS for AES encryption -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+<script src="{% static 'js/app.js' %}"></script>
+
+</body>
+</html>
